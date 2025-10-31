@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 
-export default function SearchBox({ initialValue, defaultValue, resetToken, onSearch }) {
+// SearchBox triggers `onSearch` automatically on every keystroke.
+// A small debounce is used (default 300ms) to avoid rapid-fire calls.
+export default function SearchBox({ initialValue, defaultValue, resetToken, onSearch, debounceMs = 300 }) {
   const init = (typeof initialValue === 'string' ? initialValue : (defaultValue || '')) || '';
   const [value, setValue] = useState(init);
 
@@ -9,6 +11,15 @@ export default function SearchBox({ initialValue, defaultValue, resetToken, onSe
       setValue('');
     }
   }, [resetToken]);
+
+  useEffect(() => {
+    const trimmed = value.trim();
+    const id = setTimeout(() => {
+      onSearch?.(trimmed);
+    }, debounceMs);
+
+    return () => clearTimeout(id);
+  }, [value, debounceMs, onSearch]);
 
   function handleSubmit(e) {
     e.preventDefault();
